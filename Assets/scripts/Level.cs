@@ -24,6 +24,7 @@ public class Level : MonoBehaviour {
             }
         }
 
+
         //create level
         levelBlocks = new LevelBlock[12][];
         for (int i = 0; i < levelBlocks.Length; i++)
@@ -32,20 +33,25 @@ public class Level : MonoBehaviour {
         //create level blocks
         for (int y = 0; y < 12; y++)
         {
+            
             for (int x = 0; x < 12; x++)
             {
-                float xOffset = -1.075f + (x * 0.16f);
-                float yOffset = 0.636f + (y * 0.16f);
+                float xOffset = 0 + (x * 0.16f);
+                float yOffset = 0 - (y * 0.16f);
                 Vector3 pos = transform.position;
                 pos.x = pos.x + xOffset;
                 pos.y = pos.y + yOffset;
+                pos.z = 0;
 
-                levelBlocks[x][y] = ((GameObject)Instantiate(blockPrefab, pos, Quaternion.identity)).GetComponent<LevelBlock>();
+                levelBlocks[x][y] = Instantiate<LevelBlock>(blockPrefab);
+                levelBlocks[x][y].transform.position = pos;
                 levelBlocks[x][y].GetComponent<SpriteRenderer>().sprite = dirtTiles[(y/3)];
+
+            
             }
+            
         }
-        
-        
+
 	}
 	
 	// Update is called once per frame

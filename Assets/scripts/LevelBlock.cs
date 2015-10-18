@@ -24,13 +24,23 @@ public class LevelBlock : MonoBehaviour {
 
         currentOverlay = transform.FindChild("TunnelOverlay").gameObject.GetComponent<SpriteRenderer>();
 
-        Debug.Log(transform.position.x);
-        Debug.Log(GetComponent<SpriteRenderer>().sprite.bounds.size.x);
-
 	}
 	
 	// Update is called once per frame
 	void Update () {
 	
 	}
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (currentOverlay != null && other.gameObject.name == "Player")
+        {
+            currentOverlay.sprite = overlays[1];
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D coll)
+    {
+        Debug.Log("FUCK ME");
+    }
 }
