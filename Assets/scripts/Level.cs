@@ -58,4 +58,16 @@ public class Level : MonoBehaviour {
 	void Update () {
 	
 	}
+
+    public int[] GetTileCoords(LevelBlock l)
+    {
+        int[] coords = null;
+
+        for (int y = 0; y < 12; y++)
+            for (int x = 0; x < 12; x++)
+                if (levelBlocks[x][y] == l)
+                    coords = new int[] { x, y };
+
+        return coords;
+    }
 }

@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Player : MonoBehaviour {
 
@@ -11,6 +12,7 @@ public class Player : MonoBehaviour {
     bool isFiring = false;
     bool isAttached = false;
     bool isPumping = false;
+    bool isDigging = false;
 
     //references
     Animator animator;
@@ -24,6 +26,8 @@ public class Player : MonoBehaviour {
     }
 
     LevelBlock inBlock;
+    List<LevelBlock> blocksColliding;
+    bool isAdjusting = false; //used for auto movement between tiles
 
     public Direction facing = Direction.right;
 
@@ -31,90 +35,218 @@ public class Player : MonoBehaviour {
     // Use this for initialization
 	void Start () {
         animator = GetComponent<Animator>();
-
+        blocksColliding = new List<LevelBlock>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
         //movement
+        
+        //adjust if colliding with multiple blocks
+        if (blocksColliding.Count > 1)
+        {
+            float distance = 100.0f;
+            LevelBlock closestBlock = null;
+            Vector3 playerPos = new Vector3(transform.position.x - 0.08f, transform.position.y + 0.08f, 0);
+
+            foreach (LevelBlock l in blocksColliding)
+                if (Vector3.Distance(playerPos, l.transform.position) < distance)
+                {
+                    distance = Vector3.Distance(playerPos, l.transform.position);
+                    closestBlock = l;
+                }
+
+            inBlock = closestBlock;
+
+            if (facing == Direction.left || facing == Direction.right)
+                transform.position = new Vector3(transform.position.x, inBlock.transform.position.y - 0.08f, 0);
+            else
+                transform.position = new Vector3(inBlock.transform.position.x + 0.08f, transform.position.y, 0);
+        }
+        else
+            if (blocksColliding.Count == 1)
+                inBlock = blocksColliding[0];
+        
+        
         if (Input.GetKey(KeyCode.RightArrow))
         {
-            move(Direction.right);
+            if (!isAdjusting)
+            {
+                move(Direction.right);
 
-            isMoving = true;
-            facing = Direction.right;
+                isMoving = true;
+                isAdjusting = false;
+                facing = Direction.right;
+            }
         }
         else if (Input.GetKey(KeyCode.LeftArrow))
         {
-            move(Direction.left);
+            if (!isAdjusting)
+            {
+                move(Direction.left);
 
-            isMoving = true;
-            facing = Direction.left;
+                isMoving = true;
+                isAdjusting = false;
+                facing = Direction.left;
+            }
         }
         else if (Input.GetKey(KeyCode.UpArrow))
         {
-            move(Direction.up);
-            
-            isMoving = true;
-            facing = Direction.up;
+            if (!isAdjusting)
+            {
+                move(Direction.up);
+
+                isMoving = true;
+                isAdjusting = false;
+                facing = Direction.up;
+            }
         }
         else if (Input.GetKey(KeyCode.DownArrow))
         {
-            move(Direction.down);
+            if (!isAdjusting)
+            {
+                move(Direction.down);
 
-            isMoving = true;
-            facing = Direction.down;
+                isMoving = true;
+                facing = Direction.down;
+            }
         }
         else
         {
-            if(isMoving)
+            if (isMoving)
             {
-                //keep moving until fully in block
-                switch (facing)
-                {
-                    case Direction.right:
+                isAdjusting = true;
+            }
+            else
+                isAdjusting = false;
+        }
+
+        //keep moving if not in center of tile
+        if (isAdjusting)
+        {
+            //keep moving until fully in block
+            switch (facing)
+            {
+                case Direction.right:
+                    transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
+                    if (transform.position.x - 0.08f >= inBlock.transform.position.x)
+                    {
+                        isMoving = false;
+                        isAdjusting = false;
+                    }
+                    break;
+                case Direction.left:
+                    transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+                    if (transform.position.x + 0.08f <= inBlock.transform.position.x + 0.16f)
+                    {
+                        isMoving = false;
+                        isAdjusting = false;
+                    }
+                    break;
+                case Direction.up:
+                    if (transform.localScale.x > 0)
                         transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                        if (transform.position.x - 0.08f >= inBlock.transform.position.x)
-                            isMoving = false;
-                        break;
-                    case Direction.left:
+                    else
                         transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
-                        if (transform.position.x + 0.08f <= inBlock.transform.position.x + 0.16f)
-                            isMoving = false;
-                        break;
-                    case Direction.up:
-                        if(transform.localScale.x > 0)
-                            transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                        else
-                            transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
 
-                        if (transform.position.y + 0.08f > inBlock.transform.position.y)
-                            isMoving = false;
-                            
-                        break;
-                    case Direction.down:
-                        if(transform.localScale.x > 0)
-                            transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                        else
-                            transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+                    if (transform.position.y + 0.08f > inBlock.transform.position.y)
+                    {
+                        isMoving = false;
+                        isAdjusting = false;
+                    }
 
-                        if (transform.position.y + 0.08f < inBlock.transform.position.y)
-                            isMoving = false;
-                        break;
-                }
+                    break;
+                case Direction.down:
+                    if (transform.localScale.x > 0)
+                        transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
+                    else
+                        transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+
+                    if (transform.position.y + 0.08f < inBlock.transform.position.y)
+                    {
+                        isMoving = false;
+                        isAdjusting = false;
+                    }
+                    break;
             }
         }
 
 
         updateAnimator();
+
+        blocksColliding.Clear();
 	}
 
     private void updateAnimator()
     {
+        if (isMoving)
+        {
+            //check if digging
+            Level l = GameObject.Find("Level").GetComponent<Level>();
+
+            int[] tilePos = l.GetTileCoords(inBlock);
+
+            switch (facing)
+            { 
+                case Direction.right:
+                    if (tilePos[0] != 11)
+                    {
+                        if (!l.levelBlocks[tilePos[0] + 1][tilePos[1]].dug)
+                            isDigging = true;
+                        else
+                            isDigging = false;
+                    }
+                    else
+                        isDigging = false;
+
+                    break;
+
+                case Direction.left:
+                    if (tilePos[0] != 0)
+                    {
+                        if (!l.levelBlocks[tilePos[0] - 1][tilePos[1]].dug)
+                            isDigging = true;
+                        else
+                            isDigging = false;
+                    }
+                    else
+                        isDigging = false;
+
+                    break;
+
+                case Direction.up:
+                    if (tilePos[1] != 0)
+                    {
+                        if (!l.levelBlocks[tilePos[0]][tilePos[1] - 1].dug)
+                            isDigging = true;
+                        else
+                            isDigging = false;
+                    }
+                    else
+                        isDigging = false;
+
+                    break;
+
+                case Direction.down:
+                    if (tilePos[1] != 11)
+                    {
+                        if (!l.levelBlocks[tilePos[0]][tilePos[1] + 1].dug)
+                            isDigging = true;
+                        else
+                            isDigging = false;
+                    }
+                    else
+                        isDigging = false;
+                    break;
+            }
+        }
+        
+        
         animator.SetBool("isMoving", isMoving);
         animator.SetBool("isFiring", isFiring);
         animator.SetBool("isAttached", isAttached);
         animator.SetBool("isPumping", isPumping);
+        animator.SetBool("isDigging", isDigging);
     }
 
     private void move(Direction d)
@@ -170,8 +302,9 @@ public class Player : MonoBehaviour {
     }
 
     void OnTriggerEnter2D(Collider2D other){
-
-        inBlock = other.gameObject.GetComponent<LevelBlock>();
+        if(other.gameObject.GetComponent<LevelBlock>() != null)
+            blocksColliding.Add(other.gameObject.GetComponent<LevelBlock>());
+        //inBlock = other.gameObject.GetComponent<LevelBlock>();
         //Debug.Log("Block " + currBlock.transform.position.ToString() + " | Me " + transform.position);
         //Debug.Log(currBlock.transform.position.x + ", " + currBlock.transform.position.y);
     }

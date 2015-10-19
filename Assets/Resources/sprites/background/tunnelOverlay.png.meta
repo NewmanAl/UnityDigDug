@@ -1,6 +1,6 @@
 fileFormatVersion: 2
 guid: c8e831984ea1d474cb90b1074deb823d
-timeCreated: 1445109026
+timeCreated: 1445212520
 licenseType: Free
 TextureImporter:
   fileIDToRecycleName:
@@ -15,6 +15,11 @@ TextureImporter:
     21300016: tunnelOverlay_8
     21300018: tunnelOverlay_9
     21300020: tunnelOverlay_10
+    21300022: tunnelOverlay_11
+    21300024: tunnelOverlay_12
+    21300026: tunnelOverlay_13
+    21300028: tunnelOverlay_14
+    21300030: tunnelOverlay_15
   serializedVersion: 2
   mipmaps:
     mipMapMode: 0
@@ -165,6 +170,56 @@ TextureImporter:
       rect:
         serializedVersion: 2
         x: 16
+        y: 0
+        width: 16
+        height: 16
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: tunnelOverlay_11
+      rect:
+        serializedVersion: 2
+        x: 32
+        y: 0
+        width: 16
+        height: 16
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: tunnelOverlay_12
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 48
+        width: 16
+        height: 16
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: tunnelOverlay_13
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 32
+        width: 16
+        height: 16
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: tunnelOverlay_14
+      rect:
+        serializedVersion: 2
+        x: 48
+        y: 16
+        width: 16
+        height: 16
+      alignment: 1
+      pivot: {x: 0, y: 1}
+      border: {x: 0, y: 0, z: 0, w: 0}
+    - name: tunnelOverlay_15
+      rect:
+        serializedVersion: 2
+        x: 48
         y: 0
         width: 16
         height: 16
