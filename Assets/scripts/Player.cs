@@ -7,15 +7,27 @@ public class Player : MonoBehaviour {
     [SerializeField]
     float movementSpeed;
 
+    [SerializeField]
+    float firingTotalTime;
+    float currentFiringTime = 0;
+
     //animator bools
     bool isMoving = false;
     bool isFiring = false;
     bool isAttached = false;
     bool isPumping = false;
     bool isDigging = false;
+    bool isDieing = false;
+    int deathState = 0;
+    [SerializeField]
+    float deathStateWaitTime;
+    float currentDeathStateTime;
+
 
     //references
     Animator animator;
+    AudioSource deathSound;
+    AudioSource shootSound;
 
     public enum Direction
     {
@@ -36,6 +48,10 @@ public class Player : MonoBehaviour {
 	void Start () {
         animator = GetComponent<Animator>();
         blocksColliding = new List<LevelBlock>();
+
+        AudioSource[] audioSources = GetComponents<AudioSource>();
+        shootSound = audioSources[0];
+        deathSound = audioSources[1];
 	}
 	
 	// Update is called once per frame
@@ -66,108 +82,149 @@ public class Player : MonoBehaviour {
         else
             if (blocksColliding.Count == 1)
                 inBlock = blocksColliding[0];
-        
-        
-        if (Input.GetKey(KeyCode.RightArrow))
-        {
-            if (!isAdjusting)
-            {
-                move(Direction.right);
 
-                isMoving = true;
-                isAdjusting = false;
-                facing = Direction.right;
+
+
+        if (!isDieing)
+        {
+            if (!isFiring)
+            {
+                if (Input.GetKey(KeyCode.RightArrow))
+                {
+                    if (!isAdjusting)
+                    {
+                        move(Direction.right);
+
+                        isMoving = true;
+                        isAdjusting = false;
+                        facing = Direction.right;
+                    }
+                }
+                else if (Input.GetKey(KeyCode.LeftArrow))
+                {
+                    if (!isAdjusting)
+                    {
+                        move(Direction.left);
+
+                        isMoving = true;
+                        isAdjusting = false;
+                        facing = Direction.left;
+                    }
+                }
+                else if (Input.GetKey(KeyCode.UpArrow))
+                {
+                    if (!isAdjusting)
+                    {
+                        move(Direction.up);
+
+                        isMoving = true;
+                        isAdjusting = false;
+                        facing = Direction.up;
+                    }
+                }
+                else if (Input.GetKey(KeyCode.DownArrow))
+                {
+                    if (!isAdjusting)
+                    {
+                        move(Direction.down);
+
+                        isMoving = true;
+                        facing = Direction.down;
+                    }
+                }
+                else
+                {
+                    if (isMoving)
+                    {
+                        isAdjusting = true;
+                    }
+                    else
+                        isAdjusting = false;
+                }
             }
-        }
-        else if (Input.GetKey(KeyCode.LeftArrow))
-        {
-            if (!isAdjusting)
-            {
-                move(Direction.left);
 
-                isMoving = true;
-                isAdjusting = false;
-                facing = Direction.left;
+            //keep moving if not in center of tile
+            if (isAdjusting)
+            {
+                //keep moving until fully in block
+                switch (facing)
+                {
+                    case Direction.right:
+                        transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
+                        if (transform.position.x - 0.08f >= inBlock.transform.position.x)
+                        {
+                            isMoving = false;
+                            isAdjusting = false;
+                        }
+                        break;
+                    case Direction.left:
+                        transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+                        if (transform.position.x + 0.08f <= inBlock.transform.position.x + 0.16f)
+                        {
+                            isMoving = false;
+                            isAdjusting = false;
+                        }
+                        break;
+                    case Direction.up:
+                        if (transform.localScale.x > 0)
+                            transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
+                        else
+                            transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+
+                        if (transform.position.y + 0.08f > inBlock.transform.position.y)
+                        {
+                            isMoving = false;
+                            isAdjusting = false;
+                        }
+
+                        break;
+                    case Direction.down:
+                        if (transform.localScale.x > 0)
+                            transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
+                        else
+                            transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
+
+                        if (transform.position.y + 0.08f < inBlock.transform.position.y)
+                        {
+                            isMoving = false;
+                            isAdjusting = false;
+                        }
+                        break;
+                }
             }
-        }
-        else if (Input.GetKey(KeyCode.UpArrow))
-        {
-            if (!isAdjusting)
-            {
-                move(Direction.up);
 
-                isMoving = true;
-                isAdjusting = false;
-                facing = Direction.up;
+            //fire
+            if (Input.GetKey(KeyCode.Space) && !isMoving)
+            {
+                isFiring = true;
+                shootSound.Play();
             }
-        }
-        else if (Input.GetKey(KeyCode.DownArrow))
-        {
-            if (!isAdjusting)
-            {
-                move(Direction.down);
 
-                isMoving = true;
-                facing = Direction.down;
+            if (isFiring)
+            {
+                currentFiringTime += Time.deltaTime;
+                if (currentFiringTime >= firingTotalTime)
+                {
+                    isFiring = false;
+                    currentFiringTime = 0;
+                }
             }
         }
         else
-        {
-            if (isMoving)
+        { 
+            //currently dieing
+            currentDeathStateTime += Time.deltaTime;
+            if(currentDeathStateTime >= deathStateWaitTime)
             {
-                isAdjusting = true;
+                deathState++;
+                currentDeathStateTime = 0;
+                if (deathState == 3)
+                    deathSound.Play();
             }
-            else
-                isAdjusting = false;
-        }
 
-        //keep moving if not in center of tile
-        if (isAdjusting)
-        {
-            //keep moving until fully in block
-            switch (facing)
+            if (deathState == 4)
             {
-                case Direction.right:
-                    transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                    if (transform.position.x - 0.08f >= inBlock.transform.position.x)
-                    {
-                        isMoving = false;
-                        isAdjusting = false;
-                    }
-                    break;
-                case Direction.left:
-                    transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
-                    if (transform.position.x + 0.08f <= inBlock.transform.position.x + 0.16f)
-                    {
-                        isMoving = false;
-                        isAdjusting = false;
-                    }
-                    break;
-                case Direction.up:
-                    if (transform.localScale.x > 0)
-                        transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                    else
-                        transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
-
-                    if (transform.position.y + 0.08f > inBlock.transform.position.y)
-                    {
-                        isMoving = false;
-                        isAdjusting = false;
-                    }
-
-                    break;
-                case Direction.down:
-                    if (transform.localScale.x > 0)
-                        transform.Translate(Vector2.right * movementSpeed * Time.deltaTime);
-                    else
-                        transform.Translate(-Vector2.right * movementSpeed * Time.deltaTime);
-
-                    if (transform.position.y + 0.08f < inBlock.transform.position.y)
-                    {
-                        isMoving = false;
-                        isAdjusting = false;
-                    }
-                    break;
+                Destroy(gameObject);
             }
         }
 
@@ -247,6 +304,8 @@ public class Player : MonoBehaviour {
         animator.SetBool("isAttached", isAttached);
         animator.SetBool("isPumping", isPumping);
         animator.SetBool("isDigging", isDigging);
+        animator.SetBool("isDieing", isDieing);
+        animator.SetInteger("deathState", deathState);
     }
 
     private void move(Direction d)
@@ -307,5 +366,14 @@ public class Player : MonoBehaviour {
         //inBlock = other.gameObject.GetComponent<LevelBlock>();
         //Debug.Log("Block " + currBlock.transform.position.ToString() + " | Me " + transform.position);
         //Debug.Log(currBlock.transform.position.x + ", " + currBlock.transform.position.y);
+
+        if (other.gameObject.GetComponent<Dino>() != null)
+        {
+            if (!isDieing) 
+            {
+                isDieing = true;
+                deathState = 0;
+            }
+        }
     }
 }
