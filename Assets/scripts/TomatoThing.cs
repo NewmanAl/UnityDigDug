@@ -4,14 +4,15 @@ using System.Collections;
 public class TomatoThing : MonoBehaviour {
 
     [SerializeField]
-    float movementSpeed;
+    public float movementSpeed;
 
     //animator bools
     bool isMoving = false;
     bool isBeingPumped = false;
-    int pumpState = 0;
+    int pumpState = -1;
     Animator animator;
 
+    AudioSource blowupSound;
 
     public Player.Direction facing;
 
@@ -22,13 +23,49 @@ public class TomatoThing : MonoBehaviour {
 	void Start () {
         isMoving = true;
         animator = GetComponent<Animator>();
+        blowupSound = GetComponent<AudioSource>();
 	}
 	
 	// Update is called once per frame
 	void Update () {
         if(isMoving)
             move();
+
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            isMoving = false;
+            isBeingPumped = true;
+            pumpState++;
+
+            if(pumpState == 3)
+                blowupSound.Play();
+
+            if (pumpState == 4)
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.Backspace) && isBeingPumped)
+        {
+            pumpState--;
+
+            if (pumpState == -1)
+            {
+                isBeingPumped = false;
+                isMoving = true;
+            }
+        }
+
+        updateAnimator();
 	}
+
+    private void updateAnimator()
+    {
+        animator.SetBool("isMoving", isMoving); ;
+        animator.SetBool("isPumping", isBeingPumped);
+        animator.SetInteger("pumpState", pumpState);
+    }
 
     private void move()
     {

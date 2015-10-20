@@ -7,22 +7,27 @@ public class LevelBlock : MonoBehaviour {
     SpriteRenderer currentOverlay;
 
     public bool dug;
-    
-    // Use this for initialization
-	void Start () {
-        
+
+    void Awake()
+    {
+        currentOverlay = transform.FindChild("TunnelOverlay").gameObject.GetComponent<SpriteRenderer>();
+
         Sprite[] sprites = Resources.LoadAll<Sprite>("sprites/background");
 
         overlays = new Sprite[16];
         int j = 0;
-        for(int i =0; i<sprites.Length; i++)
+        for (int i = 0; i < sprites.Length; i++)
             if (sprites[i].name.StartsWith("tunnelOverlay"))
             {
                 overlays[j] = sprites[i];
                 j++;
             }
+    }
 
-        currentOverlay = transform.FindChild("TunnelOverlay").gameObject.GetComponent<SpriteRenderer>();
+    // Use this for initialization
+	void Start () {
+        
+        
 
 	}
 	
@@ -33,11 +38,11 @@ public class LevelBlock : MonoBehaviour {
 
     void OnTriggerEnter2D(Collider2D other)
     {
-        if (currentOverlay != null && other.gameObject.name == "Player")
+        if (currentOverlay != null && other.gameObject.GetComponent<Player>() != null)
         {
             
-            /*
             
+            /*
             //determine appropriate overlay
             Level l = GameObject.Find("Level").GetComponent<Level>();
             int[] myPos = l.GetTileCoords(this);
@@ -177,6 +182,12 @@ public class LevelBlock : MonoBehaviour {
 
             dug = true;
         }
+    }
+
+    public void SetOverlay(int overLayIndex)
+    {
+        currentOverlay.sprite = overlays[overLayIndex];
+        dug = true;
     }
 
 }

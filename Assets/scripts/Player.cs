@@ -43,11 +43,14 @@ public class Player : MonoBehaviour {
 
     public Direction facing = Direction.right;
 
-    
+    void Awake()
+    {
+        blocksColliding = new List<LevelBlock>();
+    }
+
     // Use this for initialization
 	void Start () {
         animator = GetComponent<Animator>();
-        blocksColliding = new List<LevelBlock>();
 
         AudioSource[] audioSources = GetComponents<AudioSource>();
         shootSound = audioSources[0];
@@ -367,7 +370,7 @@ public class Player : MonoBehaviour {
         //Debug.Log("Block " + currBlock.transform.position.ToString() + " | Me " + transform.position);
         //Debug.Log(currBlock.transform.position.x + ", " + currBlock.transform.position.y);
 
-        if (other.gameObject.GetComponent<Dino>() != null)
+        if (other.gameObject.GetComponent<Dino>() != null || other.gameObject.GetComponent<TomatoThing>() != null)
         {
             if (!isDieing) 
             {

@@ -4,13 +4,13 @@ using System.Collections;
 public class Dino : MonoBehaviour {
 
     [SerializeField]
-    float movementSpeed;
+    public float movementSpeed;
     
     //animator stuff
     Animator animator;
     bool isMoving = false;
     bool isBeingPumped = false;
-    int pumpState = 0;
+    int pumpState = -1;
     bool isBreathingFire = false;
     int fireState = 0;
 
@@ -18,10 +18,13 @@ public class Dino : MonoBehaviour {
 
     public LevelBlock inBlock;
 
+    AudioSource blowupSound;
+
     // Use this for initialization
 	void Start () {
         isMoving = true;
         animator = GetComponent<Animator>();
+        blowupSound = GetComponent<AudioSource>();
 	}
 	
 	// Update is called once per frame
@@ -31,7 +34,44 @@ public class Dino : MonoBehaviour {
         {
             move();
         }
+
+        if (Input.GetKeyUp(KeyCode.Space))
+        {
+            isMoving = false;
+            isBeingPumped = true;
+            pumpState++;
+
+            if(pumpState == 3)
+                blowupSound.Play();
+
+            if (pumpState == 4)
+            {
+                Destroy(gameObject);
+            }
+        }
+
+        if (Input.GetKeyUp(KeyCode.Backspace) && isBeingPumped)
+        {
+            pumpState--;
+
+            if (pumpState == -1)
+            {
+                isBeingPumped = false;
+                isMoving = true;
+            }
+        }
+
+        updateAnimator();
 	}
+
+    private void updateAnimator()
+    {
+        animator.SetBool("isMoving", isMoving); ;
+        animator.SetBool("isBeingPumped", isBeingPumped);
+        animator.SetInteger("pumpState", pumpState);
+        animator.SetBool("isBreathingFire", isBreathingFire);
+        animator.SetInteger("fireState", fireState);
+    }
 
     private void move()
     {
